@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TH Server Online Monitor</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    color: #fff;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px #00eaff;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+}
+
+.card {
+    background: rgba(0,0,0,0.5);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 0 15px rgba(0,234,255,0.3);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 25px rgba(0,234,255,0.6);
+}
+
+.server-name {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.online {
+    color: #00ff9d;
+}
+
+.offline {
+    color: #ff4c4c;
+}
+
+.count {
+    font-size: 36px;
+    margin-top: 10px;
+}
+.time {
+    font-size: 12px;
+    opacity: 0.7;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+    <h1>🌐 TH Online Server Monitor</h1>
+
+    <div class="grid" id="servers"></div>
+</div>
+
+<script>
+const servers = [
+    { name: "TH1", url: "http://45.144.167.176:8888/server/online" },
+    { name: "TH2", url: "http://82.26.104.151:8888/server/online" },
+    { name: "TH3", url: "http://82.26.104.196:8888/server/online" },
+    { name: "TH4", url: "http://82.26.104.197:8888/server/online" },
+    { name: "TH5", url: "http://82.26.104.199:8888/server/online" }
+];
+
+const container = document.getElementById("servers");
+
+function createCard(server) {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+        <div class="server-name">${server.name}</div>
+        <div class="status offline">Loading...</div>
+        <div class="count">-</div>
+        <div class="time"></div>
+    `;
+    container.appendChild(div);
+    return div;
+}
+
+async function updateServer(card, server) {
+    const status = card.querySelector(".status");
+    const count = card.querySelector(".count");
+    const time = card.querySelector(".time");
+
+    try {
+        const res = await fetch(server.url);
+        const data = await res.text();
+
+        const online = parseInt(data) || 0;
+
+        status.textContent = "Online";
+        status.className = "status online";
+        count.textContent = online;
+    } catch (e) {
+        status.textContent = "Offline";
+        status.className = "status offline";
+        count.textContent = "0";
+    }
+
+    time.textContent = "อัปเดตล่าสุด: " + new Date().toLocaleTimeString();
+}
+
+const cards = servers.map(s => ({ server: s, card: createCard(s) }));
+
+function refresh() {
+    cards.forEach(item => updateServer(item.card, item.server));
+}
+
+refresh();
+setInterval(refresh, 10000);
+</script>
+</body>
+</html>
