@@ -2,113 +2,205 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TH Server Online Status</title>
+<title>Server Monitor</title>
 
 <style>
+
 body{
-    margin:0;
-    font-family:system-ui, sans-serif;
-    background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-    color:#fff;
+    background:#020617;
+    font-family:system-ui,sans-serif;
+    color:white;
+    text-align:center;
+    padding:15px;
 }
+
+/* โลโก้ */
+.logo{
+    width:70px;
+    margin:10px auto;
+}
+
+/* หัว */
+h2{
+    color:#38bdf8;
+    margin:5px 0;
+}
+
+/* รวมทั้งหมด */
+.total{
+    margin:10px 0 15px;
+    font-size:18px;
+    color:#22c55e;
+}
+
+/* กล่องหลัก */
 .container{
-    max-width:520px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:10px;
+    max-width:700px;
     margin:auto;
-    padding:20px;
 }
-h1{
-    text-align:center;
-    margin-bottom:20px;
-}
+
+/* การ์ด */
 .card{
-    background:rgba(255,255,255,0.12);
-    backdrop-filter:blur(10px);
-    border-radius:16px;
-    padding:16px 20px;
-    margin-bottom:14px;
-    box-shadow:0 10px 25px rgba(0,0,0,.35);
+    background:#020617;
+    border:1px solid #0f172a;
+    border-radius:8px;
+    padding:10px 5px;
+    box-shadow:0 0 6px #0ea5e933;
 }
-.row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin:6px 0;
-}
-.badge{
-    padding:4px 12px;
-    border-radius:20px;
+
+/* ชื่อ */
+.server{
     font-size:13px;
+    color:#94a3b8;
 }
-.online{background:#00c853;}
-.offline{background:#d50000;}
+
+/* จำนวน */
+.count{
+    font-size:22px;
+    font-weight:600;
+    margin-top:3px;
+}
+
+/* ping */
+.ping{
+    font-size:11px;
+    color:#64748b;
+}
+
+/* สี */
+.low{color:#facc15;}
+.mid{color:#22c55e;}
+.high{color:#38bdf8;}
+.off{color:#ef4444;}
+
 .footer{
-    text-align:center;
-    font-size:12px;
-    opacity:.8;
-    margin-top:15px;
+    margin-top:12px;
+    font-size:11px;
+    color:#64748b;
 }
+
 </style>
 </head>
 
 <body>
+
+<!-- โลโก้ (เปลี่ยนรูปได้) -->
+<img src="https://i.imgur.com/7Q9Z1Zm.png" class="logo">
+
+<h2>Server Monitor</h2>
+
+<div class="total" id="total">
+กำลังโหลด...
+</div>
+
 <div class="container">
-<h1>📡 Server Online (TH)</h1>
 
-<div id="servers"></div>
+<div class="card">
+<div class="server">TH1</div>
+<div class="count" id="s1">...</div>
+<div class="ping" id="p1">...</div>
+</div>
 
-<div class="footer">อัปเดตทุก 10 วินาที</div>
+<div class="card">
+<div class="server">TH2</div>
+<div class="count" id="s2">...</div>
+<div class="ping" id="p2">...</div>
+</div>
+
+<div class="card">
+<div class="server">TH3</div>
+<div class="count" id="s3">...</div>
+<div class="ping" id="p3">...</div>
+</div>
+
+<div class="card">
+<div class="server">TH4</div>
+<div class="count" id="s4">...</div>
+<div class="ping" id="p4">...</div>
+</div>
+
+<div class="card">
+<div class="server">TH5</div>
+<div class="count" id="s5">...</div>
+<div class="ping" id="p5">...</div>
+</div>
+
+</div>
+
+<div class="footer">
+Auto Update ทุก 5 วินาที
 </div>
 
 <script>
-const servers=[
- {name:"TH1",url:"http://45.144.167.176:81/server/online.json"},
- {name:"TH2",url:"http://82.26.104.151:81/server/online.json"},
- {name:"TH3",url:"http://82.26.104.196:81/server/online.json"},
- {name:"TH4",url:"http://82.26.104.197:81/server/online.json"},
- {name:"TH5",url:"http://82.26.104.199:81/server/online.json"}
+
+const servers = [
+ { id:"s1", ping:"p1", url:"http://45.144.167.176:81/server/online.json" },
+ { id:"s2", ping:"p2", url:"http://82.26.104.151:81/server/online.json" },
+ { id:"s3", ping:"p3", url:"http://82.26.104.196:81/server/online.json" },
+ { id:"s4", ping:"p4", url:"http://82.26.104.197:81/server/online.json" },
+ { id:"s5", ping:"p5", url:"http://82.26.104.199:81/server/online.json" }
 ];
 
-const container=document.getElementById("servers");
-
-servers.forEach(s=>{
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=`
-        <div class="row">
-            <strong>${s.name}</strong>
-            <span id="${s.name}-status" class="badge offline">LOADING</span>
-        </div>
-        <div class="row">
-            <span>คนออนไลน์</span>
-            <span id="${s.name}-count">-</span>
-        </div>
-    `;
-    container.appendChild(div);
-});
-
-async function loadStatus(){
-    for(const s of servers){
-        try{
-            const res=await fetch(s.url,{cache:"no-store"});
-            if(!res.ok) throw "offline";
-            const data=await res.json();
-
-            document.getElementById(s.name+"-status").textContent="ONLINE";
-            document.getElementById(s.name+"-status").className="badge online";
-            document.getElementById(s.name+"-count").textContent=
-                data.online ?? data.users ?? data.count ?? "0";
-
-        }catch(e){
-            document.getElementById(s.name+"-status").textContent="OFFLINE";
-            document.getElementById(s.name+"-status").className="badge offline";
-            document.getElementById(s.name+"-count").textContent="-";
-        }
-    }
+// วัด ping
+async function ping(url){
+    const start = performance.now();
+    await fetch(url,{cache:"no-store"});
+    return Math.round(performance.now()-start);
 }
 
-loadStatus();
-setInterval(loadStatus,10000);
+function setColor(el,num){
+
+    el.className="count";
+
+    if(num<20) el.classList.add("low");
+    else if(num<50) el.classList.add("mid");
+    else el.classList.add("high");
+}
+
+async function load(){
+
+    let total = 0;
+
+    for(const s of servers){
+
+        const el = document.getElementById(s.id);
+        const pl = document.getElementById(s.ping);
+
+        try{
+
+            const start = performance.now();
+            const r = await fetch(s.url,{cache:"no-store"});
+            const d = await r.json();
+            const end = performance.now();
+
+            let num = d.online ?? d.count ?? d;
+
+            total += Number(num);
+
+            el.innerHTML = num+" คน";
+            setColor(el,num);
+
+            pl.innerHTML = "Ping: "+Math.round(end-start)+" ms";
+
+        }catch{
+
+            el.innerHTML="OFFLINE";
+            el.className="count off";
+
+            pl.innerHTML="No Signal";
+        }
+    }
+
+    document.getElementById("total").innerHTML =
+    "👥 ออนไลน์ทั้งหมด: "+total+" คน";
+}
+
+load();
+setInterval(load,5000);
+
 </script>
 
 </body>
